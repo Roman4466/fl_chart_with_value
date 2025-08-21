@@ -94,6 +94,9 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
 
     drawBars(canvasWrapper, _groupBarsPosition!, holder);
 
+    // ADD THIS LINE: Draw labels on stack items
+    drawStackItemLabels(context, canvasWrapper, _groupBarsPosition!, holder);
+
     drawErrorIndicatorData(canvasWrapper, _groupBarsPosition!, holder);
 
     if (data.extraLinesData.extraLinesOnTop) {
@@ -167,6 +170,89 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
       groupBarsPosition.add(GroupBarsPosition(groupX, barsX));
     }
     return groupBarsPosition;
+  }
+
+  @visibleForTesting
+  void drawStackItemLabels(
+      BuildContext context,
+      CanvasWrapper canvasWrapper,
+      List<GroupBarsPosition> groupBarsPosition,
+      PaintHolder<BarChartData> holder,
+      ) {
+    final data = holder.data;
+    final viewSize = canvasWrapper.size;
+
+    for (var i = 0; i < data.barGroups.length; i++) {
+      final barGroup = data.barGroups[i];
+      for (var j = 0; j < barGroup.barRods.length; j++) {
+        final barRod = barGroup.barRods[j];
+
+        // Only draw labels if we have stack items
+        if (barRod.rodStackItems.isNotEmpty) {
+          final x = groupBarsPosition[i].barsX[j];
+          final widthHalf = barRod.width / 2;
+          final left = x - widthHalf;
+          final right = x + widthHalf;
+
+          for (var k = 0; k < barRod.rodStackItems.length; k++) {
+            final stackItem = barRod.rodStackItems[k];
+
+            // Skip if no label
+            if (stackItem.label == null || stackItem.label!.isEmpty) {
+              continue;
+            }
+
+            final stackFromY = getPixelY(stackItem.fromY, viewSize, holder);
+            final stackToY = getPixelY(stackItem.toY, viewSize, holder);
+
+            // Calculate center position
+            final centerX = x;
+            final centerY = (stackFromY + stackToY) / 2;
+
+            // Create text style - you can customize this
+            final textStyle = TextStyle(
+              color: _getContrastColor(stackItem.color),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            );
+
+            final span = TextSpan(
+              style: Utils().getThemeAwareTextStyle(context, textStyle),
+              text: stackItem.label,
+            );
+
+            final textPainter = TextPainter(
+              text: span,
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.ltr,
+              textScaler: holder.textScaler,
+            )..layout();
+
+            // Check if text fits within the stack item bounds
+            final stackHeight = (stackFromY - stackToY).abs();
+            final stackWidth = right - left;
+
+            if (textPainter.height <= stackHeight &&
+                textPainter.width <= stackWidth) {
+
+              // Calculate text position (centered)
+              final textOffset = Offset(
+                centerX - (textPainter.width / 2),
+                centerY - (textPainter.height / 2),
+              );
+
+              canvasWrapper.drawText(textPainter, textOffset);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Color _getContrastColor(Color backgroundColor) {
+    // Calculate luminance to determine if we should use white or black text
+    final luminance = backgroundColor.computeLuminance();
+    return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
   @visibleForTesting

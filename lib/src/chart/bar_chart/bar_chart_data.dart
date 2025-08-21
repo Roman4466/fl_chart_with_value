@@ -489,10 +489,12 @@ class BarChartRodStackItem with EquatableMixin {
     this.toY,
     this.color, [
     this.borderSide = Utils.defaultBorderSide,
+    this.label,
   ]);
 
   /// Renders a Stacked Chart section from [fromY]
   final double fromY;
+  final String? label;
 
   /// Renders a Stacked Chart section to [toY]
   final double toY;
@@ -510,12 +512,14 @@ class BarChartRodStackItem with EquatableMixin {
     double? toY,
     Color? color,
     BorderSide? borderSide,
+    String? label,
   }) =>
       BarChartRodStackItem(
         fromY ?? this.fromY,
         toY ?? this.toY,
         color ?? this.color,
         borderSide ?? this.borderSide,
+        label ?? this.label,
       );
 
   /// Lerps a [BarChartRodStackItem] based on [t] value, check [Tween.lerp].
@@ -529,11 +533,12 @@ class BarChartRodStackItem with EquatableMixin {
         lerpDouble(a.toY, b.toY, t)!,
         Color.lerp(a.color, b.color, t)!,
         BorderSide.lerp(a.borderSide, b.borderSide, t),
+        b.label, // Labels don't interpolate, use target label
       );
 
   /// Used for equality check, see [EquatableMixin].
   @override
-  List<Object?> get props => [fromY, toY, color, borderSide];
+  List<Object?> get props => [fromY, toY, color, borderSide, label];
 }
 
 /// Holds values to draw a rod in rear of the main rod.
