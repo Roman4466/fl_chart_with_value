@@ -250,9 +250,8 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
   }
 
   Color _getContrastColor(Color backgroundColor) {
-    // Calculate luminance to determine if we should use white or black text
     final luminance = backgroundColor.computeLuminance();
-    return luminance > 0.5 ? Colors.black : Colors.white;
+    return Colors.white;
   }
 
   @visibleForTesting
